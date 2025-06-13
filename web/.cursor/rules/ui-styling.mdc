@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Guidelines for UI and styling, focusing on UI and best practices.
+globs: **/*.{ts,tsx,js,jsx}
+---
+- Follow Radix UI component guidelines and best practices.
+- Ensure UI is responsive and accessible.
+- use the defined design token as much as possible 
+- avoid writing custom CSS and use Radix UI component as much as possible

@@ -1,0 +1,5 @@
+.DS_Store
+node_modules
+
+# Go vendor directory
+vendor/
