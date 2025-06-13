@@ -49,13 +49,13 @@ Ensure PostgreSQL is running and accessible.
 #### GET workflow definition
 
 ```bash
-curl http://localhost:8086/api/v1/workflows/weather-alert-workflow
+curl http://localhost:8086/api/v1/workflows/550e8400-e29b-41d4-a716-446655440000
 ```
 
 #### POST execute workflow
 
 ```bash
-curl -X POST http://localhost:8086/api/v1/workflows/weather-alert-workflow/execute \
+curl -X POST http://localhost:8086/api/v1/workflows/550e8400-e29b-41d4-a716-446655440000/execute \
      -H "Content-Type: application/json" \
      -d '{}'
 ```

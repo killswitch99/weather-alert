@@ -14,9 +14,8 @@ func (s *Service) HandleGetWorkflow(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	slog.Debug("Returning workflow definition for id", "id", id)
 
-	// Static JSON response - formatted for readability, matches constants.ts
 	workflowJSON := `{
-		"id": "weather-alert-workflow",
+		"id": "550e8400-e29b-41d4-a716-446655440000",
 		"nodes": [
 			{
 				"id": "start",
@@ -71,7 +70,35 @@ func (s *Service) HandleGetWorkflow(w http.ResponseWriter, r *http.Request) {
 							"source": true,
 							"target": true
 						},
-						"apiEndpoint": "https://api.open-meteo.com/v1/forecast",
+						"inputVariables": ["city"],
+						"apiEndpoint": "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true",
+						"options": [
+							{
+								"city": "Sydney",
+								"lat": -33.8688,
+								"lon": 151.2093
+							},
+							{
+								"city": "Melbourne",
+								"lat": -37.8136,
+								"lon": 144.9631
+							},
+							{
+								"city": "Brisbane",
+								"lat": -27.4698,
+								"lon": 153.0251
+							},
+							{
+								"city": "Perth",
+								"lat": -31.9505,
+								"lon": 115.8605
+							},
+							{
+								"city": "Adelaide",
+								"lat": -34.9285,
+								"lon": 138.6007
+							}
+						],
 						"outputVariables": ["temperature"]
 					}
 				}
@@ -242,7 +269,6 @@ func (s *Service) HandleExecuteWorkflow(w http.ResponseWriter, r *http.Request) 
 	// Generate current timestamp
 	currentTime := time.Now().Format(time.RFC3339)
 
-	// Static JSON response - formatted for readability
 	executionJSON := fmt.Sprintf(`{
 		"executedAt": "%s",
 		"status": "completed",

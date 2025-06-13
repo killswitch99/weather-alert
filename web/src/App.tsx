@@ -15,7 +15,7 @@ import { ExecutionResultsComponent } from './components/ExecutionResults';
 import { UserInputForm } from './components/UserInputForm';
 import { WorkflowDiagram } from './components/WorkflowDiagram';
 
-const WORKFLOW_ID = 'weather-alert-workflow';
+const WORKFLOW_ID = '550e8400-e29b-41d4-a716-446655440000';
 
 function App() {
   const {
@@ -37,93 +37,9 @@ function App() {
   const deferredNodes = useDeferredValue(nodes);
   const deferredEdges = useDeferredValue(edges);
 
-  // const [isExecuting, setIsExecuting] = useState(false);
-  // const [executionResults, setExecutionResults] = useState<Results | null>(null);
   const [formData, setFormData] = useState<WorkflowFormData | null>(null);
 
-  // const executeWorkflow = (data: WorkflowFormData) => {
-  //   setFormData(data);
-  //   // setIsExecuting(true);
-
-  //   // TODO: Replace with real API call
-  //   // const response = await fetch('/api/workflow/execute', {
-  //   //   method: 'POST',
-  //   //   headers: { 'Content-Type': 'application/json' },
-  //   //   body: JSON.stringify({ formData: data })
-  //   // });
-
-  //   // Mock execution for demo
-  //   setTimeout(() => {
-  //     const mockResults: Results = {
-  //       executionId: `exec_${Date.now()}`,
-  //       status: 'completed',
-  //       startTime: new Date().toISOString(),
-  //       endTime: new Date().toISOString(),
-  //       steps: [
-  //         {
-  //           stepNumber: 1,
-  //           nodeType: 'form',
-  //           status: 'success',
-  //           duration: 10,
-  //           timestamp: new Date().toISOString(),
-  //           output: {
-  //             message: `Configuration collected for ${data.name}`,
-  //             details: data,
-  //           },
-  //         },
-  //         {
-  //           stepNumber: 2,
-  //           nodeType: 'integration',
-  //           status: 'success',
-  //           duration: 245,
-  //           timestamp: new Date().toISOString(),
-  //           output: {
-  //             message: `Weather API: ${data.city} = 28°C`,
-  //             details: {
-  //               city: data.city,
-  //               temperature: 28,
-  //               endpoint: `https://api.open-meteo.com/v1/forecast?q=${data.city}`,
-  //             },
-  //           },
-  //         },
-  //         {
-  //           stepNumber: 3,
-  //           nodeType: 'condition',
-  //           status: 'success',
-  //           duration: 5,
-  //           timestamp: new Date().toISOString(),
-  //           output: {
-  //             message: `Condition: 28°C ${data.operator.replace('_', ' ')} ${data.threshold}°C = ${data.operator === 'greater_than' ? 28 > data.threshold : 28 < data.threshold}`,
-  //             details: {
-  //               temperature: 28,
-  //               operator: data.operator,
-  //               threshold: data.threshold,
-  //               result:
-  //                 data.operator === 'greater_than' ? 28 > data.threshold : 28 < data.threshold,
-  //             },
-  //           },
-  //         },
-  //         {
-  //           stepNumber: 4,
-  //           nodeType: 'email',
-  //           status: 'success',
-  //           duration: 15,
-  //           timestamp: new Date().toISOString(),
-  //           output: {
-  //             message: `Email content prepared for ${data.email}`,
-  //             emailContent: {
-  //               to: data.email,
-  //               subject: `Weather Alert: ${data.city} is 28°C!`,
-  //               body: `Hi ${data.name},\n\nWeather alert for ${data.city}!\nCurrent temperature: 28°C\nYour condition: temperature ${data.operator.replace('_', ' ')} ${data.threshold}°C\n\nStay safe!\n\nWeather Alert System`,
-  //             },
-  //           },
-  //         },
-  //       ],
-  //     };
-  //     setExecutionResults(mockResults);
-  //     setIsExecuting(false);
-  //   }, 2000);
-  // };
+  
 
   const handleExecute = async (data: WorkflowFormData) => {
     setFormData(data);
