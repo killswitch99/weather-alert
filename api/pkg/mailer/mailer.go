@@ -28,7 +28,7 @@ func PrepareAndStubSendEmail(to string, variables map[string]any, template Email
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/plain", body)
 
-	slog.Debug("[STUB EMAIL] Would send: To=%s, Subject=%s\n", to, subject)
+	slog.Debug(fmt.Sprintf("[STUB EMAIL] Would send: To=%s, Subject=%s", to, subject))
 
 	return map[string]any{
 		"to":        to,
