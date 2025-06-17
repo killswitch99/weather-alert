@@ -20,10 +20,7 @@ export function useExecuteWorkflow(id: string) {
       const res = await fetch(`/api/v1/workflows/${id}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          formData,
-          condition: { operator: formData.operator, threshold: formData.threshold },
-        }),
+        body: JSON.stringify(formData),
       });
       if (!res.ok) {
         const errBody = (await res.json()) as ExecuteError;

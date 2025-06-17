@@ -78,7 +78,7 @@ interface ExecutionStep {
 }
 
 export interface ExecutionResults {
-  executionId: string;
+  id: string;
   status: 'completed' | 'failed' | 'cancelled';
   startTime: string;
   endTime: string;

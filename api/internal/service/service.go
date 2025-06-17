@@ -1,6 +1,7 @@
 package service
 
 import (
+	"workflow-code-test/api/internal/api/middleware"
 	"workflow-code-test/api/internal/execution"
 	"workflow-code-test/api/internal/handler"
 	"workflow-code-test/api/internal/repository"
@@ -34,6 +35,7 @@ func NewService(dbPool *pgxpool.Pool, engine *execution.Engine) (*Service, error
 func (s *Service) LoadRoutes(parentRouter *mux.Router, isProduction bool) {
 	router := parentRouter.PathPrefix("/workflows").Subrouter()
 	router.StrictSlash(false)
+	router.Use(middleware.JsonMiddleware)
 	
 	router.HandleFunc("/{id}", s.Handler.HandleGetWorkflow).Methods("GET")
 	router.HandleFunc("/{id}/execute", s.Handler.HandleExecuteWorkflow).Methods("POST")

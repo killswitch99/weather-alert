@@ -36,7 +36,6 @@ func (h *WorkflowHandler) HandleGetWorkflow(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(workflowObj)
 }
@@ -74,7 +73,6 @@ func (h *WorkflowHandler) HandleExecuteWorkflow(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(execution)
 }

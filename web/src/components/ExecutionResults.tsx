@@ -94,7 +94,7 @@ export const ExecutionResultsComponent: React.FC<ExecutionResultsProps> = ({
                 ? `Executed: ${new Date(results.executedAt).toLocaleString()}`
                 : 'runId' in results && results.runId
                   ? `Run ID: ${results.runId}`
-                  : `Execution ID: ${'executionId' in results ? results.executionId : 'N/A'}`}
+                  : `Execution ID: ${'id' in results ? results.id : 'N/A'}`}
             </Text>
           </Box>
         </Card>

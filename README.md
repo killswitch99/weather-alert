@@ -44,13 +44,20 @@ docker-compose up --build
 ## 🏗️ Project Architecture
 
 ```text
-workflow-code-test/
+workflow-challenge-v2/
 ├── api/                    # Go Backend (Port 8086)
-│   ├── main.go
-│   ├── services/
-│   ├── pkg/
+│   ├── cmd/api/            # Main entrypoint for API server
+│   ├── internal/
+│   │   ├── service/        # Execution engine, node executors, business logic
+│   │   ├── repository/     # Persistence layer (DB access)
+│   │   ├── workflow/       # API handlers
+│   │   └── integration/    # Integration tests
+│   ├── pkg/models/         # Shared Go types and models
+│   ├── scripts/            # DB migration and init scripts
+│   ├── migrations/         # SQL migration files
 │   ├── go.mod
-│   └── Dockerfile
+│   ├── Dockerfile
+│   └── README.md           # Backend API docs
 ├── web/                    # React Frontend (Port 3003)
 │   ├── src/
 │   ├── public/
@@ -59,8 +66,8 @@ workflow-code-test/
 │   ├── tsconfig.json
 │   ├── nginx.conf
 │   └── Dockerfile
-├── docker-compose.yml
-└── README.md
+├── docker-compose.yml      # Orchestrates DB, API, and frontend
+└── README.md               # Project overview (this file)
 ```
 
 ## 🔧 Development Workflow
