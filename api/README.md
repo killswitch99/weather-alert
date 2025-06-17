@@ -454,3 +454,28 @@ The workflow system is designed to be easily extensible with new node types. Her
   - Rich assertion library
   - Mocking framework
   - Suite testing functionality
+
+## 🔍 Key Design Decisions & Assumptions
+
+### Workflow Structure
+- **Single Start Node**: Each workflow must have exactly one start node
+- **Directed Acyclic Graph**: Workflows cannot contain cycles (no cycle detection implemented)
+- **Conditional Routing**: Only condition nodes can have multiple outgoing edges (true/false)
+
+### Data Flow
+- **Node Dependencies**: Weather conditions node assumes prior "weather-api" node output exists
+- **State Management**: State is passed between nodes via outputs, with no global workflow state
+- **Fixed Input Schema**: Weather integration expects specific parameters (lat/lon/city)
+
+### External Services
+- **Weather API**: Assumes reliable API availability with 10s default timeout
+- **Email Service**: Email node assumes SMTP service availability
+
+### Database Design
+- **Cascading Deletion**: Deleting a workflow removes all associated nodes and edges
+- **PostgreSQL-Specific**: Uses JSONB for flexible metadata storage
+
+### Execution Model
+- **Synchronous Processing**: Workflows execute in a blocking, synchronous manner
+- **No Retry Logic**: Failed node execution fails the entire workflow
+- **Pre-registered Nodes**: All node types must be registered before execution
