@@ -39,7 +39,7 @@ func (s *WorkflowServiceImpl) GetWorkflow(ctx context.Context, id string) (*mode
 // ExecuteWorkflow runs a workflow with the given input
 func (s *WorkflowServiceImpl) ExecuteWorkflow(ctx context.Context, id string, input models.WorkflowInput) (*models.WorkflowExecution, error) {
 	if s.engine == nil {
-		return nil, errors.New("execution engine not initialized")
+		return nil, ErrEngineNotInitialized
 	}
 
 	// Process any workflow data in the input and get the workflow in one step
@@ -56,6 +56,11 @@ func (s *WorkflowServiceImpl) ExecuteWorkflow(ctx context.Context, id string, in
 		}
 	}
 	
+	// Validate workflow structure before execution
+	if err := validateWorkflowStructure(workflow.Nodes, workflow.Edges); err != nil {
+		return nil, fmt.Errorf("invalid workflow structure: %w", err)
+	}
+	
 	// Execute the workflow
 	execution, err := s.engine.Execute(ctx, workflow, input)
 	if err != nil {
@@ -67,21 +72,31 @@ func (s *WorkflowServiceImpl) ExecuteWorkflow(ctx context.Context, id string, in
 
 // CreateWorkflow creates a new workflow
 func (s *WorkflowServiceImpl) CreateWorkflow(ctx context.Context, workflow *models.Workflow) error {
+	// Validate workflow structure
+	if err := validateWorkflowStructure(workflow.Nodes, workflow.Edges); err != nil {
+		return fmt.Errorf("cannot create workflow with ID %s: %w", workflow.ID, err)
+	}
+
 	err := s.repo.Create(ctx, workflow)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to persist workflow with ID %s: %w", workflow.ID, err)
 	}
 	return nil
 }
 
 // UpdateWorkflow updates an existing workflow
 func (s *WorkflowServiceImpl) UpdateWorkflow(ctx context.Context, workflow *models.Workflow) error {
+	// Validate workflow structure
+	if err := validateWorkflowStructure(workflow.Nodes, workflow.Edges); err != nil {
+		return fmt.Errorf("cannot update workflow with ID %s: %w", workflow.ID, err)
+	}
+
 	err := s.repo.Update(ctx, workflow)
 	if err != nil {
 		if errors.Is(err, repository.ErrWorkflowNotFound) {
-			return ErrWorkflowNotFound
+			return fmt.Errorf("%w: ID %s", ErrWorkflowNotFound, workflow.ID)
 		}
-		return err
+		return fmt.Errorf("failed to update workflow with ID %s: %w", workflow.ID, err)
 	}
 	return nil
 }
@@ -99,12 +114,12 @@ func (s *WorkflowServiceImpl) ProcessWorkflowInput(ctx context.Context, id strin
 	// Convert input.Workflow to workflow model in one step without intermediate marshal/unmarshal
 	var wf models.Workflow
 	if err := convertJSONBToWorkflow(input.Workflow, &wf); err != nil {
-		return nil, fmt.Errorf("failed to convert workflow data: %w", err)
+		return nil, fmt.Errorf("failed to convert workflow JSONB data for ID %s: %w", id, err)
 	}
 
 	// Basic validation of workflow structure
 	if err := validateWorkflow(&wf); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("workflow validation error for ID %s: %w", id, err)
 	}
 
 	// Check if the ID matches an existing workflow
@@ -141,14 +156,15 @@ func (s *WorkflowServiceImpl) ProcessWorkflowInput(ctx context.Context, id strin
 	return s.GetWorkflow(ctx, id)
 }
 
-// validateWorkflow performs basic validation on workflow structure
+// validateWorkflow performs validation on workflow structure
 func validateWorkflow(wf *models.Workflow) error {
 	if wf.Name == "" {
 		return fmt.Errorf("workflow requires a name")
 	}
 
-	if len(wf.Nodes) == 0 {
-		return fmt.Errorf("workflow requires at least one node")
+	// Use the comprehensive workflow structure validation
+	if err := validateWorkflowStructure(wf.Nodes, wf.Edges); err != nil {
+		return err
 	}
 	
 	return nil
@@ -251,5 +267,85 @@ func workflowsEqual(wf1, wf2 *models.Workflow) bool {
 	edgesEqual := <-edgesChan
 	
 	return nodesEqual && edgesEqual
+}
+
+// validateWorkflowStructure validates the structure of a workflow
+func validateWorkflowStructure(nodes []models.Node, edges []models.Edge) error {
+	if len(nodes) == 0 {
+		return fmt.Errorf("%w: workflow must have at least one node", ErrInvalidWorkflowStructure)
+	}
+
+	// Validate required node types and their positions
+	hasStart := false
+	hasEnd := false
+	startNodeIndex := -1
+	endNodeIndex := -1
+
+	// Ensure all nodes have unique IDs and required fields
+	nodeIDs := make(map[string]struct{})
+	for i, node := range nodes {
+		// Check for start and end nodes
+		if node.Type == models.NodeTypeStart {
+			hasStart = true
+			startNodeIndex = i
+		}
+		if node.Type == models.NodeTypeEnd {
+			hasEnd = true
+			endNodeIndex = i
+		}
+		
+		// Basic node validation
+		if node.ID == "" {
+			return fmt.Errorf("%w: node ID cannot be empty", ErrEmptyNodeID)
+		}
+		if _, exists := nodeIDs[node.ID]; exists {
+			return fmt.Errorf("%w: %s", ErrDuplicateNodeID, node.ID)
+		}
+		nodeIDs[node.ID] = struct{}{}
+		
+		// Validate node-specific fields
+		if node.Type == "" {
+			return fmt.Errorf("%w: node %s requires a type", ErrInvalidNodeType, node.ID)
+		}
+	}
+
+	// Check if workflow has required start and end nodes
+	if !hasStart {
+		return ErrMissingStartNode
+	}
+	if !hasEnd {
+		return ErrMissingEndNode
+	}
+	if startNodeIndex != 0 {
+		return ErrStartNodePosition
+	}
+	if endNodeIndex != len(nodes)-1 {
+		return ErrEndNodePosition
+	}
+
+	// Ensure all edges have unique IDs and correct source/target nodes
+	edgeIDs := make(map[string]struct{})
+	for _, edge := range edges {
+		if edge.ID == "" {
+			return ErrEmptyEdgeID
+		}
+		if _, exists := edgeIDs[edge.ID]; exists {
+			return fmt.Errorf("%w: %s", ErrDuplicateEdgeID, edge.ID)
+		}
+		edgeIDs[edge.ID] = struct{}{}
+		
+		// Validate edge-specific fields
+		if edge.Source == "" || edge.Target == "" {
+			return fmt.Errorf("%w: edge %s must have non-empty source and target", ErrInvalidEdgeConnection, edge.ID)
+		}
+		if _, exists := nodeIDs[edge.Source]; !exists {
+			return fmt.Errorf("%w: edge %s references undefined source node %s", ErrEdgeToUnknownNode, edge.ID, edge.Source)
+		}
+		if _, exists := nodeIDs[edge.Target]; !exists {
+			return fmt.Errorf("%w: edge %s references undefined target node %s", ErrEdgeToUnknownNode, edge.ID, edge.Target)
+		}
+	}
+
+	return nil
 }
 

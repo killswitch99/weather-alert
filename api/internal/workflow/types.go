@@ -10,8 +10,22 @@ import (
 
 // Define service errors
 var (
-	ErrWorkflowNotFound = errors.New("workflow not found")
-	ErrInvalidInput     = errors.New("invalid input")
+	ErrWorkflowNotFound      = errors.New("workflow not found")
+	ErrInvalidInput          = errors.New("invalid input")
+	ErrInvalidWorkflowStructure = errors.New("invalid workflow structure")
+	ErrMissingStartNode      = errors.New("workflow must begin with a start node")
+	ErrMissingEndNode        = errors.New("workflow must end with an end node")
+	ErrStartNodePosition     = errors.New("start node must be the first node in the workflow")
+	ErrEndNodePosition       = errors.New("end node must be the last node in the workflow")
+	ErrDuplicateNodeID       = errors.New("duplicate node ID found")
+	ErrEmptyNodeID           = errors.New("node ID cannot be empty")
+	ErrInvalidNodeType       = errors.New("node requires a type")
+	ErrEngineNotInitialized  = errors.New("execution engine not initialized")
+	ErrInvalidNodePosition   = errors.New("node has invalid position")
+	ErrEmptyEdgeID           = errors.New("edge ID cannot be empty")
+	ErrDuplicateEdgeID       = errors.New("duplicate edge ID found")
+	ErrInvalidEdgeConnection = errors.New("edge has invalid source or target")
+	ErrEdgeToUnknownNode     = errors.New("edge references undefined node")
 )
 
 // WorkflowServiceImpl implements the workflow.WorkflowService interface

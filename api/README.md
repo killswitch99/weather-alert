@@ -203,6 +203,29 @@ Registry
 ### Workflow Execution Process
 ![alt text](seqd.png)
 
+The workflow execution process works as follows:
+
+1. **Initialization**: The engine receives a workflow model and input data.
+
+2. **Node and Edge Mapping**: It constructs an in-memory representation of the workflow by:
+   - Creating node instances using the registry
+   - Building an edge routing map for node connections
+   - Identifying the start node
+
+3. **Execution Loop**: Starting from the start node, it:
+   - Executes the current node with appropriate inputs
+   - Records the execution step
+   - Determines the next node based on edge routing
+   - Handles conditional routing for decision nodes
+   - Continues until reaching an end node or error
+
+4. **Result Collection**: It assembles execution results including:
+   - Execution steps with timing information
+   - Output data from each node
+   - Overall workflow status and duration
+
+The engine maintains state across nodes using a `priorOutputs` map, allowing nodes to access outputs from previously executed nodes.
+
 # 🧩 Extending the Workflow System
 
 ### 📦 Adding New Node Types
@@ -308,6 +331,9 @@ The workflow system is designed to be easily extensible with new node types. Her
 - **Performance Testing**: Benchmarks for workflow execution
 - **Mocking Framework**: Better support for mocking external services in tests
 - **Test Fixtures**: Reusable test data and workflow definitions
+- **Workflow execution caching**
+- **Concurrent execution of independent branches**
+- **Adaptive batching of database operations**
 
 ## 📚 Key Libraries and Tools
 

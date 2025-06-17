@@ -1,4 +1,4 @@
-package service
+package workflow
 
 import (
 	"context"
@@ -63,43 +63,6 @@ func (s *TestWorkflowService) ExecuteWorkflow(ctx context.Context, id string, in
 	return execution, nil
 }
 
-// validateWorkflowStructure validates the workflow structure
-func validateWorkflowStructure(nodes []models.Node, edges []models.Edge) error {
-	if len(nodes) == 0 {
-		return fmt.Errorf("workflow must have at least one node")
-	}
-
-	hasStart := false
-	hasEnd := false
-	startNodeIndex := -1
-	endNodeIndex := -1
-
-	for i, node := range nodes {
-		if node.Type == models.NodeTypeStart {
-			hasStart = true
-			startNodeIndex = i
-		}
-		if node.Type == models.NodeTypeEnd {
-			hasEnd = true
-			endNodeIndex = i
-		}
-	}
-
-	if !hasStart {
-		return fmt.Errorf("workflow must begin with a start node")
-	}
-	if !hasEnd {
-		return fmt.Errorf("workflow must end with an end node")
-	}
-	if startNodeIndex != 0 {
-		return fmt.Errorf("start node must be the first node in the workflow")
-	}
-	if endNodeIndex != len(nodes)-1 {
-		return fmt.Errorf("end node must be the last node in the workflow")
-	}
-
-	return nil
-}
 
 // MockWorkflowRepository is a mock implementation of the repository
 type MockWorkflowRepository struct {
@@ -198,10 +161,12 @@ func TestExecuteWorkflow(t *testing.T) {
 				},
 				Edges: []models.Edge{
 					{
+						ID:     "edge1",
 						Source: "start",
 						Target: "form",
 					},
 					{
+						ID:     "edge2",
 						Source: "form",
 						Target: "end",
 					},
@@ -295,10 +260,12 @@ func TestValidateWorkflowStructure(t *testing.T) {
 			},
 			Edges: []models.Edge{
 				{
+					ID:     "edge1",
 					Source: "start",
 					Target: "form",
 				},
 				{
+					ID:     "edge2",
 					Source: "form",
 					Target: "end",
 				},
