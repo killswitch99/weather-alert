@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 	"time"
+	"workflow-code-test/api/pkg/models"
+	"workflow-code-test/api/pkg/node"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/topu/workflow-challenge-v2/api/pkg/models"
-	"github.com/topu/workflow-challenge-v2/api/pkg/node"
 )
 
 func TestNewNode(t *testing.T) {
