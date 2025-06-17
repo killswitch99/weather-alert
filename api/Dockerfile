@@ -3,7 +3,7 @@ FROM golang:1.23-alpine
 WORKDIR /app
 
 # Install build dependencies
-RUN apk add --no-cache gcc musl-dev
+RUN apk add --no-cache gcc musl-dev bash postgresql-client
 
 # Set Go environment variables
 ENV GO111MODULE=on
@@ -18,8 +18,10 @@ RUN go mod download
 # Install air for hot reloading with specific version
 RUN go install github.com/air-verse/air@v1.52.3
 
-# Copy source code
+# Copy source code (including scripts/)
 COPY . .
+
+RUN chmod +x scripts/migrate.sh
 
 # Expose port 8080
 EXPOSE 8080

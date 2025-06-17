@@ -8,52 +8,65 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+	"workflow-code-test/api/internal/execution"
+	"workflow-code-test/api/internal/service"
+	"workflow-code-test/api/pkg/db"
+	"workflow-code-test/api/pkg/log"
+	"workflow-code-test/api/pkg/models"
+	"workflow-code-test/api/pkg/node"
+	"workflow-code-test/api/pkg/node/condition"
+	"workflow-code-test/api/pkg/node/email"
+	"workflow-code-test/api/pkg/node/end"
+	"workflow-code-test/api/pkg/node/form"
+	"workflow-code-test/api/pkg/node/integration"
+	"workflow-code-test/api/pkg/node/start"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-
-	"workflow-code-test/api/pkg/db"
-	"workflow-code-test/api/services/workflow"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// Register all node types
+func registerNodeTypes(registry *node.Registry) {
+    registry.Register(models.NodeTypeStart, start.NewNode)
+    registry.Register(models.NodeTypeForm, form.NewNode)
+    registry.Register(models.NodeTypeIntegration, integration.NewNode)
+    registry.Register(models.NodeTypeCondition, condition.NewNode)
+    registry.Register(models.NodeTypeEmail, email.NewNode)
+    registry.Register(models.NodeTypeEnd, end.NewNode)
+    // New node types can be easily added here
+}
+
+func setupAPI(apiRouter *mux.Router, dbPool *pgxpool.Pool, engine *execution.Engine) {
+	svc, err := service.NewService(dbPool, engine)
+	if err != nil {
+		slog.Error("Failed to create service", "error", err)
+		return
+	}
+	svc.LoadRoutes(apiRouter, false) // isProduction=false
+}
+
 func main() {
-	// Configure structured logging
-	logHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	})
-	slog.SetDefault(slog.New(logHandler))
-
+	// Initialize the default logger
+	log.InitializeLogger()
+	// Connect to database using pgx
+	dbURL := os.Getenv("DATABASE_URL")
 	dbConfig := db.DefaultConfig()
-	dbConfig.URI = os.Getenv("DATABASE_URL")
-
+	dbConfig.URI = dbURL
+	
 	if err := db.Connect(dbConfig); err != nil {
-		slog.Error("Failed to connect to database", "error", err, "dbConfig", dbConfig.URI)
+		slog.Error("Failed to connect to database", "error", err)
 		return
 	}
-
 	defer db.Disconnect()
-
-	// setup router
+	dbPool := db.GetPool()
+	nodeRegistry := node.NewRegistry()
+	registerNodeTypes(nodeRegistry)
+	engine := execution.NewEngine(nodeRegistry)
+	// Setup router
 	mainRouter := mux.NewRouter()
-
 	apiRouter := mainRouter.PathPrefix("/api/v1").Subrouter()
-
-	// Get a connection from the pool
-	conn, err := db.GetPool().Acquire(context.Background())
-	if err != nil {
-		slog.Error("Failed to acquire database connection", "error", err)
-		return
-	}
-	defer conn.Release()
-
-	workflowService, err := workflow.NewService(conn.Conn())
-	if err != nil {
-		slog.Error("Failed to create workflow service", "error", err)
-		return
-	}
-
-	workflowService.LoadRoutes(apiRouter, false)
-
+	setupAPI(apiRouter, dbPool, engine)
 	// Configure CORS
 	corsHandler := handlers.CORS(
 		handlers.AllowedOrigins([]string{"http://localhost:3003"}), // Frontend URL
@@ -66,20 +79,16 @@ func main() {
 		Addr:    ":8080",
 		Handler: corsHandler,
 	}
-
 	// Channel to listen for errors coming from the server
 	serverErrors := make(chan error, 1)
-
 	// Start the server in a goroutine
 	go func() {
 		slog.Info("Starting server on :8080")
 		serverErrors <- srv.ListenAndServe()
 	}()
-
 	// Channel to listen for an interrupt or terminate signal from the OS
 	shutdown := make(chan os.Signal, 1)
 	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
-
 	// Blocking select waiting for either a signal or an error
 	select {
 	case err := <-serverErrors:
@@ -87,11 +96,9 @@ func main() {
 
 	case sig := <-shutdown:
 		slog.Info("Shutdown signal received", "signal", sig)
-
 		// Give outstanding requests 5 seconds to complete
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-
 		if err := srv.Shutdown(ctx); err != nil {
 			slog.Error("Could not stop server gracefully", "error", err)
 			srv.Close()
