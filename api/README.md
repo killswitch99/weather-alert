@@ -299,6 +299,9 @@ The workflow system is designed to be easily extensible with new node types. Her
 
 ### Core Functionality
 - **Bulk Operations**: Add support for bulk workflow creation and execution
+- **Centralized Error Handling**: Create a consistent error handling system with custom error types to replace scattered `fmt.Errorf` calls.
+- **Database Optimization**: Add indexes on frequently queried columns in the PostgreSQL database.
+- **API Documentation**: Add comprehensive API documentation, possibly using Swagger/OpenAPI.
 
 ### Testing & Quality
 - **Expanded Test Coverage**: More unit and integration tests
