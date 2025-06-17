@@ -308,3 +308,28 @@ The workflow system is designed to be easily extensible with new node types. Her
 - **Performance Testing**: Benchmarks for workflow execution
 - **Mocking Framework**: Better support for mocking external services in tests
 - **Test Fixtures**: Reusable test data and workflow definitions
+
+## 📚 Key Libraries and Tools
+
+### Core Libraries
+
+#### UUID (github.com/google/uuid)
+- **Why Chosen:** For generating unique identifiers
+- **Benefits:**
+  - Standard implementation of UUID generation
+  - Provides globally unique identifiers without coordination
+  - Useful for distributed systems where IDs need to be generated independently
+
+#### gomail (gopkg.in/gomail.v2)(out of scope)
+- **Why Chosen:** For sending emails from the email node
+- **Benefits:**
+  - Simple API for composing and sending emails
+  - Support for attachments and HTML content
+  - SMTP authentication and TLS support
+
+#### Testify (github.com/stretchr/testify)
+- **Why Chosen:** For unit and integration testing
+- **Benefits:**
+  - Rich assertion library
+  - Mocking framework
+  - Suite testing functionality
