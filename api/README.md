@@ -95,6 +95,101 @@ When a workflow JSON is included in the request:
 - The API uses `api/pkg/db.DefaultConfig()` and reads the URI from `DATABASE_URL`.
 - For schema/configuration details, see the main project README or this file's comments.
 
+## 📊 Database Schema
+
+```mermaid
+erDiagram
+    WORKFLOWS {
+        UUID id PK
+        VARCHAR(255) name
+        INTEGER version
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+    
+    WORKFLOW_NODES {
+        UUID id PK
+        UUID workflow_id FK
+        VARCHAR(50) node_id
+        VARCHAR(50) node_type
+        FLOAT position_x
+        FLOAT position_y
+        VARCHAR(255) label
+        TEXT description
+        JSONB metadata
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+    
+    WORKFLOW_EDGES {
+        UUID id PK
+        UUID workflow_id FK
+        VARCHAR(50) source_node_id
+        VARCHAR(50) target_node_id
+        VARCHAR(50) edge_id
+        VARCHAR(50) type
+        BOOLEAN animated
+        VARCHAR(50) stroke_color
+        INTEGER stroke_width
+        VARCHAR(255) label
+        VARCHAR(50) source_handle
+        JSONB label_style
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+    
+    WORKFLOWS ||--o{ WORKFLOW_NODES : "contains"
+    WORKFLOWS ||--o{ WORKFLOW_EDGES : "contains"
+    WORKFLOW_NODES ||--o{ WORKFLOW_EDGES : "is source of"
+    WORKFLOW_NODES ||--o{ WORKFLOW_EDGES : "is target of"
+```
+
+### Table Descriptions
+
+#### WORKFLOWS
+Stores the main workflow information including:
+- **id**: UUID primary key
+- **name**: Name of the workflow
+- **version**: Version number of the workflow (increments on update)
+- **created_at**: Timestamp when the workflow was created
+- **updated_at**: Timestamp when the workflow was last updated
+
+#### WORKFLOW_NODES
+Stores individual nodes within workflows:
+- **id**: UUID primary key
+- **workflow_id**: Foreign key to the workflows table
+- **node_id**: Identifier for the node within the workflow
+- **node_type**: Type of node (start, form, integration, condition, email, end)
+- **position_x/position_y**: Position coordinates for the node in the UI
+- **label**: Display name for the node
+- **description**: Longer text description of the node's purpose
+- **metadata**: JSON data with node-specific configuration
+
+#### WORKFLOW_EDGES
+Stores connections between nodes:
+- **id**: UUID primary key
+- **workflow_id**: Foreign key to the workflows table
+- **source_node_id**: ID of the starting node
+- **target_node_id**: ID of the ending node
+- **edge_id**: Identifier for the edge within the workflow
+- **type**: Type of edge connection
+- **animated**: Whether the edge should be animated in the UI
+- **stroke_color/stroke_width**: Visual styling for the edge
+- **label**: Text label for the edge
+- **source_handle**: Connection point identifier on the source node
+- **label_style**: JSON data with styling for the edge label
+
+### Database Relationships
+- A Workflow has many Nodes
+- A Workflow has many Edges
+- Nodes and Edges belong to a Workflow
+- Each Edge connects two Nodes (source and target)
+
+### Constraints and Indexes
+- Unique constraint on (workflow_id, node_type)
+- Indexes on workflow_id in both nodes and edges tables
+- Indexes on source_node_id and target_node_id in edges table
+
 ## Project Structure
 ```
 api/
